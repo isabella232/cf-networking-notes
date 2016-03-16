@@ -1,5 +1,7 @@
 * some very rough notes on how we might implement policy in an extensible way *
 
+![diagram](policy-api.png)
+
 ## Policy Server API
 
 - POST `/app`
