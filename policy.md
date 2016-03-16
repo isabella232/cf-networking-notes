@@ -30,7 +30,7 @@
   }
   ```
   
-## Policy Agent API
+## Internal Policy API
 - GET `/app/:app_guid/whitelist`
   * as the policy agent running on a diego cell, when a new app with `:app_guid` is created on my cell,
     then I GET from this endpoint on the Policy Server that I will use to discriminate between packets on the wire
@@ -43,6 +43,7 @@
     ]
   }
   ```
+- some TBD push mechanism as well?  so that Policy Server can inform agents about changes to the whitelist?
   
 ## Policy Plugin API
 - POST `/whitelist`
