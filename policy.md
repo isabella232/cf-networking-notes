@@ -56,7 +56,7 @@
        "namespace": "/var/vcap/data/ducati/sandboxes/vni-42",
        "interface_name": "g-db8e81423d4e"
      },
-     "allowed_wire_bytes": {
+     "allowed_source_wire_bytes": {
        [
         "a7e0cd35",
         "7578a0fa"
