@@ -1,6 +1,7 @@
 *very rough notes on how we might implement policy in an extensible way*
 
-![diagram](policy-api.png)
+
+# Context
 
 ## Goals of the policy effort
 - operators, developers, high-level components like cloud controller can declare policy as a set of edges in a graph where the nodes are applications, or other endpoints within a larger network (e.g. BOSH-deployed data services)
@@ -8,16 +9,22 @@
 - the core open-source components of cloud foundry can remain agnostic to those wire-level & stack-level details
 - the core open-source policy components should be agnostic about mechanisms of connectivity (calico, vxlan, etc) and addressing (ipv4 vs ipv6; address reuse across virtual networks vs single global address space).  those details may be provided by CNI plugins in the connectivity behavior of the container networking system.
 
-
 ## about this document
 - API specs are skeletal, not exhaustive.  they suggest a direction.
 - nothing is for certain!
+
+
+
+
+# APIs
+
+![diagram](policy-api.png)
 
 ## Policy Server API
 
 - POST `/app`
 
-  *as the CC bridge, I POST to this endpoint on the Policy Server to register a new app*
+  *as the CC bridge, I POST to this endpoint on the Policy Server to register a new app.*
 
   Request:
   ```
@@ -29,7 +36,7 @@
   ```
   { 
     "guid": "db8e8142-3d4e-413f-99ef-f2a9f644e1b1",
-    "wire_bytes": "a7e0cd35"
+    "wire_id": "a7e0cd35"
   }
   ```
 
@@ -46,15 +53,16 @@
   ```
   
 ## Internal Policy API
-- GET `/app/:app_guid/whitelist`
+- GET `/app/:app_guid`
 
   *as the policy agent running on a diego cell, when a new app with `:app_guid` is created on my cell,
-    then I GET from this endpoint on the Policy Server that I will use to discriminate between packets on the wire*
+    then I GET a wire_id and a whitelist from this endpoint on the Policy Server, which I will pass on to the policy plugin running on my cell.  I do not need to understand the semantic meaning of the bytes on the wire*
 
   Response:
   ```
   {
-    "allowed_wire_bytes": [
+    "wire_id": "a7e0cd35",
+    "allowed_wire_ids": [
       "a7e0cd35",
       "7578a0fa"
     ]
@@ -64,19 +72,21 @@
   
 ## Policy Plugin API
 
-- POST `/whitelist`
+- POST `/configure`
 
   *as the policy agent running on a diego cell, when a new app with `:app_guid` is created on my cell,
-    I POST to this endpoint on the policy plugin in order to tell it about a new ethernet device on the system*
+    I POST to this endpoint on the policy plugin in order to tell it about a new ethernet device on the system.
+    the policy plugin understands the meaning of these identifiers and how to enforce policy with them.*
 
   Request:
   ```
   {
      "destination_device": {
        "namespace": "/var/vcap/data/ducati/sandboxes/vni-42",
-       "interface_name": "g-db8e81423d4e"
+       "interface_name": "g-db8e81423d4e",
+       "wire_id": "a7e0cd35"
      },
-     "allowed_source_wire_bytes": {
+     "allowed_wire_ids": {
        [
         "a7e0cd35",
         "7578a0fa"
