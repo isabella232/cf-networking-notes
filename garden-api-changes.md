@@ -47,10 +47,51 @@ type NetworkSpec struct {
   Type string
   Config interface{}
 }
+
+type BridgeConfig struct {
+  NetIn []PortMapping
+  NetOut []NetOutRule
+  Limits BandwidthLimits
+}
 ```
 
 - `Name` should be meaningful to the client and is used for subsequent lookups, e.g. "underlay-routable", "overlay", "private", etc.
 - `Type` is the name of a network plugin available on the Garden server, e.g. "bridge", "calico", "ducati-vxlan".
+- Per-network config can be captured via specialized types like `BridgeConfig`.  Other network types may have other config structs
+- The ordering of the slice elements implies an order of operations of invoking the underlying network plugins.
+We're trying to follow the [CNI spec](https://github.com/appc/cni/blob/master/SPEC.md) here.
 
-We make `NetworkSpecs` a `[]NetworkSpec` instead of `map[string]interface{}` to imply an ordering.
-This is consciously modeled on the [CNI spec](https://github.com/appc/cni/blob/master/SPEC.md).
+### Look up info by name
+
+**TBD...**
+
+With are multiple networks, all the info & metrics calls should be keyed on network name:
+
+```go
+type ContainerInfo struct {
+    State         string        
+    Events        []string
+    ContainerPath string      
+    ProcessIDs    []string      
+    Properties    Properties
+    Networks      map[string]interface{}
+}
+
+type BridgeInfo struct {
+    ContainerIP        string
+    ExternalIP         string
+    HostIP             string 
+    MappedPorts        []PortMapping 
+}
+```
+
+```go
+type Metrics struct {
+    MemoryStat  ContainerMemoryStat
+    CPUStat     ContainerCPUStat
+    DiskStat    ContainerDiskStat
+    NetworkStat map[string]ContainerNetworkStat
+}
+```
+
+- Also: what about network-related properties?
