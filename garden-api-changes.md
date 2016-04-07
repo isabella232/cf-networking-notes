@@ -115,9 +115,26 @@ type VXLANInfo struct {
 ```
 
 ## TBD:
-- Garden properties?
-- Networking config or metrics that are not tied to a particular plugin, e.g.
-  - Container IP (in the single-interface-per-container world)   
-  - default route?
-  - aggregate bandwidth limit?
-   
+Garden properties?
+
+Config or metrics not tied to a particular plugin, e.g.
+- Container IP (in the single-interface-per-container world)   
+- default route
+- aggregate bandwidth limit
+
+Maybe we reserve a "network" name, e.g. `global` or `root` for that stuff?
+
+Or maybe every collection changes to also contain a "global" field, e.g.:
+```go
+type AllNetworkSpecs struct {
+  Global NetworkGlobalSpec
+  Networks []NetworkSpec
+}
+```
+and
+```go
+type NetworkStat struct {
+  Global NetworkGlobalStat
+  Networks map[string]ContainerNetworkStat
+}
+```
