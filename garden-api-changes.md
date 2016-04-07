@@ -1,11 +1,10 @@
 ##Summary
-The Garden API makes assumptions that make container networking difficult,
-especially for supporting 3rd party network plugins.
+The Garden API contains assumptions that cause problems for pluggable container networking.
 
-We propose that networking be configured immutably at startup and modeled a collection of named drivers.  Specifically:
+We propose that networking be configured immutably at startup and modeled as a collection of named drivers:
 - At container create time, the Garden client provides to the Garden server an
-  ordered list of zero or more named network drivers to execute, along with any config needed for each driver
-- Metrics & info about networks can be retrieved by network driver name.
+  ordered list of zero or more named network plugins to execute, along with any config needed for each
+- Metrics & info about networks can be retrieved by network plugin name.
 
 ##Problem
 In the magical world of pluggable container networking, a container may end up with more than one 
@@ -115,5 +114,10 @@ type VXLANInfo struct {
 }
 ```
 
-
-- **TBD**: what about network-related Garden properties?
+## TBD:
+- Garden properties?
+- Networking config or metrics that are not tied to a particular plugin, e.g.
+  - Container IP (in the single-interface-per-container world)   
+  - default route?
+  - aggregate bandwidth limit?
+   
