@@ -47,26 +47,46 @@ type NetworkSpec struct {
   Type string
   Config interface{}
 }
-
-type BridgeConfig struct {
-  NetIn []PortMapping
-  NetOut []NetOutRule
-  Limits BandwidthLimits
-}
 ```
 
-- `Name` should be meaningful to the client and is used for subsequent lookups, e.g. "underlay-routable", "overlay", "private", etc.
+
+- `Name` should be meaningful to the client and is used for subsequent lookups for metrics & info, e.g. "underlay-routable", "overlay", "private", etc.
 - `Type` is the name of a network plugin available on the Garden server, e.g. "bridge", "calico", "ducati-vxlan".
-- Per-network config can be captured via specialized types like `BridgeConfig`.  Other network types may have other config structs
+- Per-network config can be captured via specialized types, e.g.  
+  ```go
+  type BridgeConfig struct {
+    Subnet string
+    NetIn  []PortMapping
+    NetOut []NetOutRule
+    Limits BandwidthLimits
+  }
+  ```
+  or
+  ```go
+  type VXLANConfig struct {
+    VNI      int
+    PolicyID string
+    Limits   BandwidthLimits
+  }
+  ```
+  
+- A client may specify multiple networks of the same `Type` as long as they have distinct `Name`s
 - The ordering of the slice elements implies an order of operations of invoking the underlying network plugins.
 We're trying to follow the [CNI spec](https://github.com/appc/cni/blob/master/SPEC.md) here.
 
-### Look up info by name
+### Look up metrics and info by name
 
-**TBD...**
+Metrics are available separately for each network
+```go
+type Metrics struct {
+    MemoryStat  ContainerMemoryStat
+    CPUStat     ContainerCPUStat
+    DiskStat    ContainerDiskStat
+    NetworkStat map[string]ContainerNetworkStat  // keyed by network name
+}
+```
 
-With are multiple networks, all the info & metrics calls should be keyed on network name:
-
+Similarly for Info:
 ```go
 type ContainerInfo struct {
     State         string        
@@ -74,24 +94,26 @@ type ContainerInfo struct {
     ContainerPath string      
     ProcessIDs    []string      
     Properties    Properties
-    Networks      map[string]interface{}
+    Network       map[string]interface{}
 }
+```
 
+We will have custom `Info` structs for each network `Type`:
+```go
 type BridgeInfo struct {
     ContainerIP        string
     ExternalIP         string
     HostIP             string 
     MappedPorts        []PortMapping 
 }
-```
 
-```go
-type Metrics struct {
-    MemoryStat  ContainerMemoryStat
-    CPUStat     ContainerCPUStat
-    DiskStat    ContainerDiskStat
-    NetworkStat map[string]ContainerNetworkStat
+type VXLANInfo struct {
+    ContainerIP        string
+    ContainerMAC       string
+    HostIP             string
+    VNI                int
 }
 ```
 
-- Also: what about network-related properties?
+
+- **TBD**: what about network-related Garden properties?
