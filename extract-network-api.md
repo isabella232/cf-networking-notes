@@ -40,3 +40,8 @@ Guardian has partially externalized its own Networking behavior.  Network setup 
 ## Proposed solution
 
 A new API, of some kind???  TBD!
+
+## Migration plan
+1. Build a full network API server, add shims to Guardian to delegate to it
+2. Switch the Executor & other Garden consumers over to the new API
+3. Remove the shims and remove all networking features from Garden API
