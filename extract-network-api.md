@@ -40,13 +40,6 @@ Guardian has partially externalized its own Networking behavior.  Network setup 
 ## Proposed solution
 A separate OS process, `cnetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  For now, it has two sets of endpoints.
 
-### Network configuration
-- `POST` to `/networks/overlay` with
-  ```json
-  {
-    "vni": 
-  
-  ```
 
 ### OCI hook endpoints
 Used exclusively by the OCI hook binary (configured by Guardian) to drive network setup and teardown.
