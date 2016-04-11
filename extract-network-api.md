@@ -38,11 +38,18 @@ Although we could address some of the above issues by adding a notion of multipl
 Guardian has partially externalized its own Networking behavior.  Network setup and teardown are implemented via `runc` prestart and poststop hooks.  However, key networking features like `NetIn`, `NetOut`, `Info` and `Metrics` are still implemented in-process, and there are no immediate plans to externalize them.
 
 ## Proposed solution
+A separate OS process, `cnetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  For now, it has two sets of endpoints.
 
-A separate OS process, `cnetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  It has three sets of endpoints.
+### Network configuration
+- `POST` to `/networks/overlay` with
+  ```json
+  {
+    "vni": 
+  
+  ```
 
 ### OCI hook endpoints
-Used exclusively by the OCI hook binary to drive network setup and teardown.
+Used exclusively by the OCI hook binary (configured by Guardian) to drive network setup and teardown.
 
 - `POST` to `/oci/hook/prestart` with
   ```json
@@ -52,6 +59,7 @@ Used exclusively by the OCI hook binary to drive network setup and teardown.
     "pid": 12345
   }
   ```
+  will behave similarly to the `guardian-cni-adapter --action up` today -- bind-mount the `pid`'s netns, then drive pre-configured CNI plugins to `ADD`.
   
 - `POST` to `/oci/hook/poststop` with
   ```json
@@ -60,19 +68,18 @@ Used exclusively by the OCI hook binary to drive network setup and teardown.
     "spec": "some-network-spec"
   }
   ```
+  will behave similarly to the `guardian-cni-adapter --action down` today -- drive pre-configured CNI plugins to `DEL`, then delete the netns bind-mount.
 
 ### Garden legacy compatibility endpoints
-Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients migrate to the new Network API
+Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients migrate to the new, TBD networking API
 
-- `POST` to `/garden/containers/:handle/net/in` with
-  ```json
-  {
-    "host_port": 54321,
-    "container_port": 8080
-  }
-  ```
+- `POST` to `/garden/containers/:handle/net/in`, same semantics as Garden NetIn.
 
-- `POST` to `/garden/containers/:handle/net/out` with a `garden.NetOutRule`
+- `POST` to `/garden/containers/:handle/net/out` with a `garden.NetOutRule`.  Same semantics as Garden NetOut.
+
+### New, TBD networking API
+....?
+
 
 ## Migration plan
 1. Build a full network API server, add shims to Guardian to delegate to it
