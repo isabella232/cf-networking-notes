@@ -38,12 +38,14 @@ Although we could address some of the above issues by adding a notion of multipl
 Guardian has partially externalized its own Networking behavior.  Network setup and teardown are implemented via `runc` prestart and poststop hooks.  However, key networking features like `NetIn`, `NetOut`, `Info` and `Metrics` are still implemented in-process, and there are no immediate plans to externalize them.
 
 ## Proposed solution
-A separate OS process, `cnetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  For now, it has two sets of endpoints.
+A separate OS process, `cnetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  It exposes two categories of endpoints.
 
 
-### OCI hook endpoints
-Used exclusively by the OCI hook binary (configured by Guardian) to drive network setup and teardown.
+### Guardian-facing endpoints
+Used exclusively Guardian or binaries that Guardian calls.
 
+#### OCI hook endpoints
+Called by the OCI hook binary to setup and teardown the network.
 - `POST` to `/oci/hook/prestart` with
   ```json
   {
@@ -52,7 +54,7 @@ Used exclusively by the OCI hook binary (configured by Guardian) to drive networ
     "pid": 12345
   }
   ```
-  will behave similarly to the `guardian-cni-adapter --action up` today -- bind-mount the `pid`'s netns, then drive pre-configured CNI plugins to `ADD`.
+  Will bind-mount the `pid`'s network namespace and then trigger network setup for the container.  That will execute any pre-configured CNI plugins with the `ADD` command.
   
 - `POST` to `/oci/hook/poststop` with
   ```json
@@ -61,17 +63,31 @@ Used exclusively by the OCI hook binary (configured by Guardian) to drive networ
     "spec": "some-network-spec"
   }
   ```
-  will behave similarly to the `guardian-cni-adapter --action down` today -- drive pre-configured CNI plugins to `DEL`, then delete the netns bind-mount.
-
-### Garden legacy compatibility endpoints
-Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients migrate to the new, TBD networking API
+  Will drive pre-configured CNI plugins with the `DEL` command, and then delete the network namespace bind-mount.
+  
+#### Garden legacy compatibility endpoints
+Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients migrate to the new networking API (see below)
 
 - `POST` to `/garden/containers/:handle/net/in`, same semantics as Garden NetIn.
 
 - `POST` to `/garden/containers/:handle/net/out` with a `garden.NetOutRule`.  Same semantics as Garden NetOut.
 
-### New, TBD networking API
-....?
+
+
+### "User" facing Network API
+- `POST` to `/containers/:handle/register` with
+  ```json
+  {
+    "handle": "some-garden-container-handle",
+    "networks": {
+      "bridge": {},
+      "overlay": {
+        ... // some config
+      }
+    }
+  }
+  ```
+  Before creating a container on Garden, a client should `register` the handle with the Network API.
 
 
 ## Migration plan
