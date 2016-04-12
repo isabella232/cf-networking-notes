@@ -80,13 +80,16 @@ Supports backwards compatibility with "legacy" Garden networking API calls.  Wil
   {
     "handle": "some-garden-container-handle",
     "networks": {
-      "bridge": {},
+      "bridge": {
+        "some": "config
+      },
       "overlay": {
-        ... // some config
+        "some": "config"
       }
     }
   }
   ```
+  
   Before creating a container on Garden, a client should `register` the handle with the Network API.
 
 
