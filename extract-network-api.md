@@ -81,10 +81,10 @@ Supports backwards compatibility with "legacy" Garden networking API calls.  Wil
     "handle": "some-garden-container-handle",
     "networks": {
       "bridge": {
-        "some": "config
+        "some": "config"
       },
       "overlay": {
-        "some": "config"
+        "some": "other config"
       }
     }
   }
