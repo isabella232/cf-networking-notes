@@ -7,9 +7,9 @@ In the initial proposal for application networking we had outlined a basic servi
 Now that the Container Networking team has dived into the work on Predefined Names  this it isn’t clear that this really is the simplest thing. Another solution exists which is more complex to describe but easier to implement, simpler to use, and more congruous with existing concepts: Internal Routes.
 
 ## User stories for Predefined Names
-As an operator, I can define a property in the release manifest to be the top level domain of internal hostnames, with a pre-specified value of “cloudfoundry.”
+> *As an operator, I can define a property in the release manifest to be the top level domain of internal hostnames, with a pre-specified value of “cloudfoundry.”*
 
-As a developer, when I push an app named inventory to the Checkout space, in the E_Commerce org, then I can do a DNS lookup from another app in cloudfoundry for “inventory.checkout.ecommerce.cloudfoundry” and get the IP addresses of inventory’s containers.
+> *As a developer, when I push an app named inventory to the Checkout space, in the E_Commerce org, then I can do a DNS lookup from another app in cloudfoundry for “inventory.checkout.ecommerce.cloudfoundry” and get the IP addresses of inventory’s containers.*
 
 
 
