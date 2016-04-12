@@ -25,7 +25,7 @@ Now that the Container Networking team has dived into the work on Predefined Nam
 ## Comparison
 As you see, there are certainly fewer user stories in the Predefined Names track but also a few problems that arise:
 * Name database size and synchronization issues scale directly with number of applications
-* Cloud controller would need to be polled or hit frequently to figure out if a particular app/space/org combination
+* Cloud controller would need to be polled or hit frequently to figure out if a particular app/space/org combination exists whenever another app tries to reach it
 * The validations of an Cloud Foundry Org and Space are not the same as the constraints of a DNS name, so we’d have to map more permissive CF names to the less permissive DNS equivalent and collisions in that mapping would need to be resolved.
 
 By contrast, Internal routes would:
