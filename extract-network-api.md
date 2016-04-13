@@ -38,7 +38,7 @@ Although we could address some of the above issues by adding a notion of multipl
 Guardian has partially externalized its own Networking behavior.  Network setup and teardown are implemented via `runc` prestart and poststop hooks.  However, key networking features like `NetIn`, `NetOut`, `Info` and `Metrics` are still implemented in-process, and there are no immediate plans to externalize them.
 
 ## Proposed solution
-A separate OS process, `cnetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  It exposes two categories of endpoints.
+A separate OS process, tentatively named `conetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  It exposes two categories of endpoints.
 
 
 ### Guardian-facing endpoints
