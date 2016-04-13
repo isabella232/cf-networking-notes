@@ -47,7 +47,9 @@ Used exclusively Guardian or binaries that Guardian calls.
 #### OCI hook generation
 Called by Garden to get the prestart and post-stop OCI hooks used for network setup and teardown.
 - `GET` to `/oci/hook/:handle`, response looks like
+
   ```json
+  
   "hooks" : {
         "prestart": [
             {
