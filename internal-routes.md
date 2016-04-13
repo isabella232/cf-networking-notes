@@ -16,11 +16,9 @@ Now that the Container Networking team has dived into the work on Predefined Nam
 ## User stories for Internal Routes
 > *As an operator, I can define a property in the release manifest to be the top level domain of internal hostnames, with a pre-specified value of “cloudfoundry.”*
 
-> *As an developer, I can run “cf create-internal-route cf create-route my-space example.com*
+> As an developer, I can run `cf map-internal-route my-frontend-app frontend.cloudfoundry`
 
-> *As developer I can run “cf create-create-internal-route inventory inventory”*
-
-> *As an operator I can define the internal domain, to replace .cloudfoundry*
+> As an operator I can define the internal domain to replace `.cloudfoundry`
 
 ## Comparison
 As you see, there are certainly fewer user stories in the Predefined Names track but also a few problems that arise:
