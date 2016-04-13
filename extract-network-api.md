@@ -133,6 +133,7 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
   
   At any time while the container is alive, the client may update policy via a `PUT` to this endpoint.
 
+**TBD: Limits & metrics...**
 
 ## Migration plan
 1. Build a full network API server, add shims to Guardian to delegate to it
