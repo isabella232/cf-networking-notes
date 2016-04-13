@@ -44,26 +44,26 @@ A separate OS process, `cnetd` (container networking daemon), serves an HTTP API
 ### Guardian-facing endpoints
 Used exclusively Guardian or binaries that Guardian calls.
 
-#### OCI hook endpoints
-Called by the OCI hook binary to setup and teardown the network.
-- `POST` to `/oci/hook/prestart` with
+#### OCI hook generation
+Called by Garden to get the prestart and post-stop OCI hooks used for network setup and teardown.
+- `GET` to `/oci/hook/:handle`, response looks like
   ```json
-  {
-    "handle": "some-garden-container-handle",
-    "spec": "some-network-spec",
-    "pid": 12345
-  }
+  "hooks" : {
+        "prestart": [
+            {
+                "path": "/var/vcap/packages/ducati/bin/oci-hook",
+                "args": [ "oci-hook", "--handle=some-container-handle", "--action=up", "--vni=12345"],
+                "env":  [ "key1=value1" ]
+            },
+        ],
+        "poststop": [
+            {
+                "path": "/var/vcap/packages/ducati/bin/oci-hook",
+                "args": ["oci-hook", "--handle=some-container-handle", "--action=down" ]
+            }
+        ]
+    }
   ```
-  Will bind-mount the `pid`'s network namespace and then trigger network setup for the container.  That will execute any pre-configured CNI plugins with the `ADD` command.
-  
-- `POST` to `/oci/hook/poststop` with
-  ```json
-  {
-    "handle": "some-garden-container-handle",
-    "spec": "some-network-spec"
-  }
-  ```
-  Will drive pre-configured CNI plugins with the `DEL` command, and then delete the network namespace bind-mount.
   
 #### Garden legacy compatibility endpoints
 Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients migrate to the new networking API (see below)
