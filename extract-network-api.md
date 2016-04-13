@@ -76,7 +76,10 @@ Supports backwards compatibility with "legacy" Garden networking API calls.  Wil
 
 
 
-### "User" facing Network API
+### "User-facing" Network API
+
+Used by current Garden clients (Diego, Concourse, BOSH-lite)
+
 - `POST` to `/containers/:handle/register` with
   ```json
   {
