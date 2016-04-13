@@ -80,12 +80,12 @@ Supports backwards compatibility with "legacy" Garden networking API calls.  Wil
 - `POST` to `/containers/:handle/register` with
   ```json
   {
-    "handle": "some-garden-container-handle",
     "networks": {
       "bridge": {
         "some": "config"
       },
       "overlay": {
+        "vni": 1234,
         "some": "other config"
       }
     }
@@ -93,6 +93,42 @@ Supports backwards compatibility with "legacy" Garden networking API calls.  Wil
   ```
   
   Before creating a container on Garden, a client should `register` the handle with the Network API.
+
+- `PUT` to `/containers/:handle/policy` with
+  ```json
+  {
+    "networks": {
+      "bridge": {
+        "netin": [ 
+          { "host": 0, "container": 0 },
+          { "host": 0, "container": 80 }
+        ],
+        "netout": [
+          {
+            "action": "drop",
+          	"protocol": "any",
+          	"destination": [ "10.0.0.0/8", "172.16.0.0/16" ]
+          },
+          {
+            "action": "allow",
+            "protocol": "tcp",
+            "destination": [ "0.0.0.0/0" ]
+          }
+        ]
+      },
+      "overlay": {
+        "vni_whitelist": [
+          3456,
+          7890,
+          1234
+        ]
+      }
+    }
+  }
+  ```
+  responds with the same data, except any `0`s in the netin spec get replaced with dynamically-allocated ports.
+  
+  At any time while the container is alive, the client may update policy via a `PUT` to this endpoint.
 
 
 ## Migration plan
