@@ -1,14 +1,14 @@
 In a separate document, we explained [why we want to extract networking from Garden](why-extract-api.md).  Here we explain how.
 
 ## Proposed approach
-A separate OS process, tentatively named `conetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  It exposes two categories of endpoints.
+A separate OS process, tentatively named `conetd` (container networking daemon), serves an HTTP API on a UNIX socket.  It exposes two categories of endpoints.
 
 ### Guardian-facing endpoints
 Used exclusively Guardian or binaries that Guardian calls.
 
 #### OCI hook generation
 Called by Garden to get the prestart and post-stop OCI hooks used for network setup and teardown.
-- `GET` to `/oci/hook/:handle`, response looks like
+- `POST` to `/oci/hook` with a Garden `ContainerSpec`.  The handler will utilize the `ContainerSpec` `Properties` hash key `network`.  The response is a set of OCI hooks, e.g.
 
   ```json
   
@@ -39,34 +39,29 @@ Supports backwards compatibility with "legacy" Garden networking API calls.  Wil
 
 
 ### "User-facing" Network API
+Used by current Garden clients (Diego, Concourse, BOSH-lite) to define networks & policy.
 
-Used by current Garden clients (Diego, Concourse, BOSH-lite)
-
-- `POST` to `/containers/:handle/register` with
+- `POST` to `/networks` with
   ```json
   {
-    "networks": {
-      "bridge": {
+      "name": "my-overlay",
+      "type": "vxlan",
+      "config": {
         "some": "config"
-      },
-      "overlay": {
-        "vni": 1234,
-        "some": "other config"
       }
-    }
   }
   ```
-  
-  Before creating a container on Garden, a client should `register` the handle with the Network API.
 
+  To create a container that will be attached to this network, the Garden client must set the `network` property on a `ContainerSpec` to be an array of networks -- the container will be attached to each of them.
+  
 - `PUT` to `/containers/:handle/policy` with
   ```json
   {
     "networks": {
-      "bridge": {
+      "my-bridge-network": {
         "some": "policy document"
       },
-      "overlay": {
+      "my-overlay": {
         "policies": [
           { "something": "tbd" }
         ]
@@ -74,8 +69,7 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
     }
   }
   ```
-  responds with the same data, except any `0`s in the `expose` spec get replaced with dynamically-allocated ports.
-  
+
   At any time while the container is alive, the client may update policy via a `PUT` to this endpoint.
   
 ## The evolution of network policy
