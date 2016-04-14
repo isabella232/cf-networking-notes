@@ -24,12 +24,19 @@ Before creating a container, we define one or more networks to which it may be a
   }
   ```
 
-To use these networks, a Garden client then sets the `network.attach_to` property on the `ContainerSpec`:
-  
-  ```go
-    myContainerSpec.Properties["network.attach_to"] = "my-bridge-network my-overlay",
-    myContainerSpec.Properties["network.multi_network_route_in_dedicated_namespace" = "true"
-  ```
+Then, define a container's network config:
+- `PUT` to `/containers/:handle/config` with
+```json
+{
+  "attach_to": [
+    "my-bridge",
+    "my-overlay"
+  ],
+  "more": "config here..."
+}
+```
+
+Then create the container via the Garden API as usual.  Guardian will configure OCI hooks similarly to how it does today: it sets the hook binary, passing the container handle and `action` (`up` or `down`) as flags.  The hook binary will be a simple HTTP client to a private endpoint on `conetd`, passing in the container handle and action, enabling `conetd` to do the appropriate work using the already-created `config`.
 
   
 At any time while the container is alive, the client may update policy on a particular container:
@@ -52,29 +59,6 @@ At any time while the container is alive, the client may update policy on a part
 
 ### Guardian-facing endpoints
 
-**OCI hook generation**
-Called by Garden to get the prestart and post-stop OCI hooks used for network setup and teardown.
-- `POST` to `/oci/hook` with a Garden `ContainerSpec`.  The handler will inspect `ContainerSpec.Properties["network.*"]` key/value pairs.   The response is a set of OCI hooks, e.g.
-
-  ```json
-  
-  "hooks" : {
-        "prestart": [
-            {
-                "path": "/var/vcap/packages/ducati/bin/oci-hook",
-                "args": [ "oci-hook", "--handle=some-container-handle", "--action=up", "--vni=12345"],
-                "env":  [ "key1=value1" ]
-            },
-        ],
-        "poststop": [
-            {
-                "path": "/var/vcap/packages/ducati/bin/oci-hook",
-                "args": ["oci-hook", "--handle=some-container-handle", "--action=down" ]
-            }
-        ]
-    }
-  ```
-  
 **Garden legacy compatibility endpoints**
 Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients fully migrate to the new networking API (see below)
 
