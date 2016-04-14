@@ -21,9 +21,9 @@ system without impacting diego code directly: the `annotation` field and the
 `routes` map.
 
 The first of these was probably intended to allow humans to add some text that
-describes the LRP purpose but, as far as I can tell, it's unused in the
-context of Cloud Foundry. Unfortunately, it's a single field and only allows
-one bit of data so it's hard to consider it extensible.
+describes the LRP purpose but, it's currently used to hold an ETag that is used
+by the route emitter. Unfortunately, it's a single field and only allows one bit
+of data so it's hard to consider it extensible.
 
 The second is the `routes` map. This field is a map that uses string keys but
 can carry any data at all. It's opaque and can be dynamically updated but it's
