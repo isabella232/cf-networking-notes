@@ -48,13 +48,26 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite) to define networks 
       "type": "vxlan",
       "config": {
         "some": "config"
+      },
+      "default_policy": {
+        "some": "policy document"
       }
   }
   ```
 
-  To create a container that will be attached to this network, the Garden client must set the `network` property on a `ContainerSpec` to be an array of networks -- the container will be attached to each of them.
+  The Garden client then sets a property called `network` on a `ContainerSpec`:
   
+  ```javascript
+    myContainerSpec.Properties["network"] = {
+      "attach_to": [ "my-bridge-network", "my-overlay" ],
+      "route_in_dedicated_namespace": true
+    }
+  ```
+
+  
+  At any time while the container is alive, the client may update policy on a particular container:
 - `PUT` to `/containers/:handle/policy` with
+
   ```json
   {
     "networks": {
@@ -70,7 +83,7 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite) to define networks 
   }
   ```
 
-  At any time while the container is alive, the client may update policy via a `PUT` to this endpoint.
+
   
 ## The evolution of network policy
 
