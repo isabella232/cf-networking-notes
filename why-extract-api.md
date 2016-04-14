@@ -3,7 +3,7 @@ The Garden API contains assumptions that cause problems for pluggable container 
 
 We propose to extract all networking functionality from Garden into a separate API server, name to-be-determined.  
 
-This document explains why.
+This document explains why.  A separate document explains [how we propose to extract it](how-extract-api.md)
 
 ##Problem
 Both the Garden API and it's current implementation (Guardian) are problematic for a world where a container may be reachable over multiple networks of various types.
