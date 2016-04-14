@@ -84,9 +84,11 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
     }
   }
   ```
-  responds with the same data, except any `0`s in the netin spec get replaced with dynamically-allocated ports.
+  responds with the same data, except any `0`s in the `expose` spec get replaced with dynamically-allocated ports.
   
   At any time while the container is alive, the client may update policy via a `PUT` to this endpoint.
+  
+  **The full definition of policy language is TBD.  We hope that it is beyond the scope of this document.  Example policies show above are meant to be suggestive, not prescriptive.  **
 
 **TBD: Limits & metrics...**
 
