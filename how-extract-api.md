@@ -64,7 +64,7 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
   {
     "networks": {
       "bridge": {
-        { "some": "policy document" }
+        "some": "policy document"
       },
       "overlay": {
         "policies": [
