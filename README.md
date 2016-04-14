@@ -4,8 +4,7 @@ rough, early draft, crazy ideas about where we might go with OSS Container Netwo
 
 * [Policy](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/policy.md):
 Description of ways we could enforce policy
-* [Extract Network API](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/extract-network-api.md):
-Musings about how we should extract the network API
+* The [Why](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/why-extract-api.md) and [How](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/how-extract-api.md) of extracting Network functionality from the Garden API
 * [Internal Routes](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/internal-routes.md):
 A proposal for creating names for service discovery of apps deployed to cloudfoundry
 * [External Services](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/external-services.md):
