@@ -54,7 +54,7 @@ At any time while the container is alive, the client may update policy on a part
 
 **OCI hook generation**
 Called by Garden to get the prestart and post-stop OCI hooks used for network setup and teardown.
-- `POST` to `/oci/hook` with a Garden `ContainerSpec`.  The handler will inspect `ContainerSpec.Properties["network.*"] key/value pairs.   The response is a set of OCI hooks, e.g.
+- `POST` to `/oci/hook` with a Garden `ContainerSpec`.  The handler will inspect `ContainerSpec.Properties["network.*"]` key/value pairs.   The response is a set of OCI hooks, e.g.
 
   ```json
   
