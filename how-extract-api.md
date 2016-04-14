@@ -1,14 +1,60 @@
 In a separate document, we explained [why we want to extract networking from Garden](why-extract-api.md).  Here we explain how.
 
 ## Proposed approach
-A separate OS process, tentatively named `conetd` (container networking daemon), serves an HTTP API on a UNIX socket.  It exposes two categories of endpoints.
+A separate OS process, tentatively named `conetd` (container networking daemon), serves an HTTP API on a UNIX socket.  It exposes two categories of endpoints -- one used by "clients" (e.g. Diego, Concourse), and another used by Guardian itself.
+
+
+### "User-facing" Network API
+Used by current Garden clients (Diego, Concourse, BOSH-lite) to define networks & policy.
+
+Before creating a container, we define one or more networks to which it may be attached:
+
+- `POST` to `/networks` with
+
+  ```json
+  {
+      "name": "my-overlay",
+      "type": "vxlan",
+      "config": {
+        "some": "config"
+      },
+      "default_policy": {
+        "some": "policy document"
+      }
+  }
+  ```
+
+To use these networks, a Garden client then sets the `network.attach_to` property on the `ContainerSpec`:
+  
+  ```go
+    myContainerSpec.Properties["network.attach_to"] = "my-bridge-network my-overlay",
+    myContainerSpec.Properties["network.multi_network_route_in_dedicated_namespace" = "true"
+  ```
+
+  
+At any time while the container is alive, the client may update policy on a particular container:
+- `PUT` to `/containers/:handle/policy` with
+
+  ```json
+  {
+    "networks": {
+      "my-bridge-network": {
+        "some": "policy document"
+      },
+      "my-overlay": {
+        "policies": [
+          { "something": "tbd" }
+        ]
+      }
+    }
+  }
+  ```
 
 ### Guardian-facing endpoints
-Used exclusively Guardian or binaries that Guardian calls.
 
-#### OCI hook generation
+**OCI hook generation**
 Called by Garden to get the prestart and post-stop OCI hooks used for network setup and teardown.
-- `POST` to `/oci/hook` with a Garden `ContainerSpec`.  The handler will utilize the `ContainerSpec` `Properties` hash key `network`.  The response is a set of OCI hooks, e.g.
+- `POST` to `/oci/hook` with a Garden `ContainerSpec`.  The handler will inspect `ContainerSpec.Properties["network.*"] key/value pairs.   The response is a set of OCI hooks, e.g.
 
   ```json
   
@@ -29,59 +75,13 @@ Called by Garden to get the prestart and post-stop OCI hooks used for network se
     }
   ```
   
-#### Garden legacy compatibility endpoints
-Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients migrate to the new networking API (see below)
+**Garden legacy compatibility endpoints**
+Supports backwards compatibility with "legacy" Garden networking API calls.  Will be deprecated and removed once clients fully migrate to the new networking API (see below)
 
 - `POST` to `/garden/containers/:handle/net/in`, same semantics as Garden NetIn.
 
 - `POST` to `/garden/containers/:handle/net/out` with a `garden.NetOutRule`.  Same semantics as Garden NetOut.
 
-
-
-### "User-facing" Network API
-Used by current Garden clients (Diego, Concourse, BOSH-lite) to define networks & policy.
-
-- `POST` to `/networks` with
-  ```json
-  {
-      "name": "my-overlay",
-      "type": "vxlan",
-      "config": {
-        "some": "config"
-      },
-      "default_policy": {
-        "some": "policy document"
-      }
-  }
-  ```
-
-  The Garden client then sets a property called `network` on a `ContainerSpec`:
-  
-  ```javascript
-    myContainerSpec.Properties["network"] = {
-      "attach_to": [ "my-bridge-network", "my-overlay" ],
-      "route_in_dedicated_namespace": true
-    }
-  ```
-
-  
-  At any time while the container is alive, the client may update policy on a particular container:
-- `PUT` to `/containers/:handle/policy` with
-
-  ```json
-  {
-    "networks": {
-      "my-bridge-network": {
-        "some": "policy document"
-      },
-      "my-overlay": {
-        "policies": [
-          { "something": "tbd" }
-        ]
-      }
-    }
-  }
-  ```
 
 
   
