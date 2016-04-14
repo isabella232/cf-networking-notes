@@ -1,31 +1,30 @@
 # Proposal for Internal Routes
 
 ## Overview
+The container networking team is very close to a working overlay network that applications can have level 3 connectivity with each other. However, there is no mechanism for developers to discover the IP address of a particular app on that overlay network. We propose a basic DNS based service
 
-In the initial proposal for application networking we had outlined a basic service discovery mechanism: a DNS name for apps in the format “appname.spacename.orgname.cloudfoundry”. This will be referred to as Predefined Names. Developers need some basic service discovery to connect their applications independent of a container’s IP address; IP addresses should be left for the platform to control. Though necessary, we hope to provide the most basic service discovery we can while focusing on network connectivity. Service discovery has many existing solutions but container connectivity in Cloud Foundry has very few.
+## User stories
 
-Now that the Container Networking team has dived into the work on Predefined Names  this it isn’t clear that this really is the simplest thing. Another solution exists which is more complex to describe but easier to implement, simpler to use, and more congruous with existing concepts: Internal Routes.
+> GIVEN I have an app my-frontend-app
+> AND the shared internal domain is called `.mycloudfoundry`
+> WHEN I run `cf map-internal-route my-frontend-app frontend`
+> THEN on the overlay network DNS resolves `frontend.mycloudfoundry` to the IP addresses of my app instances
 
-## User stories for Predefined Names
-> *As an operator, I can define a property in the release manifest to be the top level domain of internal hostnames, with a pre-specified value of “cloudfoundry.”*
+> GIVEN I have a property set on my bosh manifest for `connet.shared_internal_domain: mycloudfoundry`
+> WHEN I deploy Cloud Foundry
+> THEN applications with internal routes are accessible at `*.mycloudfoundry`
 
-> *As a developer, when I push an app named inventory to the Checkout space, in the E_Commerce org, then I can do a DNS lookup from another app in cloudfoundry for “inventory.checkout.ecommerce.cloudfoundry” and get the IP addresses of inventory’s containers.*
+## About domains
 
+Internal routes parallels normal application routes. This proposal has avoided talking about a key feature of external routes: user provided domains scoped to an org. For the initial effort the commands are assumed to only have a single domain: the shared domain. We are interested in feedback on whether or not this is acceptable scope to cut.
 
+## Implementation concerns
 
-## User stories for Internal Routes
-> *As an operator, I can define a property in the release manifest to be the top level domain of internal hostnames, with a pre-specified value of “cloudfoundry.”*
+### How would a user interact with this?
+The user interface could be a plugin for the CLI. This plugin could resolve app names to app guids and then POST the desired DNS name to app guid mapping to cloud foundry and report errors or successful mappings.
 
-> As an developer, I can run `cf map-internal-route my-frontend-app frontend.cloudfoundry`
+### Where is this stored?
+Some component would need to maintain a table of DNS names and their associated applications. This component would either need to push the entirety of this table down to each cell or remain available for queries by Ducati Daemons running on each cell as they receive DNS resolutions with a top level domain of the internal domain. Where it is stored affects where the CLI plugin must POST.
 
-> As an operator I can define the internal domain to replace `.cloudfoundry`
-
-## Comparison
-As you see, there are certainly fewer user stories in the Predefined Names track but also a few problems that arise:
-* Name database size and synchronization issues scale directly with number of applications
-* Cloud controller would need to be polled or hit frequently to figure out if a particular app/space/org combination exists whenever another app tries to reach it
-* The validations of an Cloud Foundry Org and Space are not the same as the constraints of a DNS name, so we’d have to map more permissive CF names to the less permissive DNS equivalent and collisions in that mapping would need to be resolved.
-
-By contrast, Internal routes would:
-* Limit the size of number of the DNS entries that would need to be stored and synchronized
-* Open the possibility of storing state outside of Cloud Controller, once the CLI has determined the app ID of a DNS name it would not need to query for more information
+### What about DNS caching and load balancing?
+The Ducati Daemon could be extended to rotate the IP address order it returns in response to DNS requests to perform some basic load balancing. Another option would be to return virtual IPs and balance them to the real IP addresses. Either way, DNS cache busting is a problem but it is possible to solve it
