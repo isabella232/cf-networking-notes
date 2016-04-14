@@ -64,21 +64,11 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
   {
     "networks": {
       "bridge": {
-        "expose": [ 
-          { "host": 0, "container": 0 },
-          { "host": 0, "container": 80 }
-        ],
-        "policies": [
-          "system.allow-legacy-db",
-          "builtin.deny-private-address-ranges",
-          "builtin.allow-all"
-        ]
+        { "some": "policy document" }
       },
       "overlay": {
         "policies": [
-          "builtin.allow-self",
-          "builtin.allow-space",
-          "builtin.deny-all"
+          { "something": "tbd" }
         ]
       }
     }
@@ -88,7 +78,11 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
   
   At any time while the container is alive, the client may update policy via a `PUT` to this endpoint.
   
-  **The full definition of policy language is TBD.  We hope that it is beyond the scope of this document.  Example policies show above are meant to be suggestive, not prescriptive.  **
+## The evolution of network policy
+
+In order to move quickly, we should let the network policy language remain mostly "legacy" for now, and slowly evolve it towards something better.  I'd rather not block the extraction effort on the perfection of the policy language.
+
+Therefore, the first iteration of this extraction effort will have the `bridge` policy document closely resemble existing Garden `NetIn` and `NetOut` policy documents.  We can then evolve towards something better.
 
 **TBD: Limits & metrics...**
 
