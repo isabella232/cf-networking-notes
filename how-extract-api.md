@@ -1,4 +1,4 @@
-In a separate document, we explained [why we want to extract networking from Garden](why-extract.md).  Here we explain how.
+In a separate document, we explained [why we want to extract networking from Garden](why-extract-api.md).  Here we explain how.
 
 ## Proposed approach
 A separate OS process, tentatively named `conetd` (container networking daemon), serves an HTTP API on `127.0.0.1`.  It exposes two categories of endpoints.
