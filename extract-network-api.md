@@ -102,28 +102,21 @@ Used by current Garden clients (Diego, Concourse, BOSH-lite)
   {
     "networks": {
       "bridge": {
-        "netin": [ 
+        "expose": [ 
           { "host": 0, "container": 0 },
           { "host": 0, "container": 80 }
         ],
-        "netout": [
-          {
-            "action": "drop",
-          	"protocol": "any",
-          	"destination": [ "10.0.0.0/8", "172.16.0.0/16" ]
-          },
-          {
-            "action": "allow",
-            "protocol": "tcp",
-            "destination": [ "0.0.0.0/0" ]
-          }
+        "policies": [
+          "system.allow-legacy-db",
+          "builtin.deny-private-address-ranges",
+          "builtin.allow-all"
         ]
       },
       "overlay": {
-        "vni_whitelist": [
-          3456,
-          7890,
-          1234
+        "policies": [
+          "builtin.allow-self",
+          "builtin.allow-space",
+          "builtin.deny-all"
         ]
       }
     }
