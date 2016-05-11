@@ -36,7 +36,7 @@
   ```
   { 
     "guid": "db8e8142-3d4e-413f-99ef-f2a9f644e1b1",
-    "wire_id": "a7e0cd35"
+    "group_id": "a7e0cd35"
   }
   ```
 
@@ -56,13 +56,13 @@
 - GET `/app/:app_guid`
 
   *as the policy agent running on a diego cell, when a new app with `:app_guid` is created on my cell,
-    then I GET a wire_id and a whitelist from this endpoint on the Policy Server, which I will pass on to the policy plugin running on my cell.  I do not need to understand the semantic meaning of the bytes on the wire*
+    then I GET a group_id and a whitelist from this endpoint on the Policy Server, which I will pass on to the policy plugin running on my cell.  I do not need to understand the semantic meaning of the bytes on the wire*
 
   Response:
   ```
   {
-    "wire_id": "a7e0cd35",
-    "allowed_wire_ids": [
+    "group_id": "a7e0cd35",
+    "allowed_group_id": [
       "a7e0cd35",
       "7578a0fa"
     ]
@@ -84,9 +84,9 @@
      "destination_device": {
        "namespace": "/var/vcap/data/ducati/sandboxes/vni-42",
        "interface_name": "g-db8e81423d4e",
-       "wire_id": "a7e0cd35"
+       "group_id": "a7e0cd35"
      },
-     "allowed_wire_ids": {
+     "allowed_group_id": {
        [
         "a7e0cd35",
         "7578a0fa"
