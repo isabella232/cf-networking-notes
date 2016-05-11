@@ -28,13 +28,13 @@
 
   Request:
   ```
-  { 
+  {
     "guid": "db8e8142-3d4e-413f-99ef-f2a9f644e1b1"
   }
   ```
   Response:
   ```
-  { 
+  {
     "guid": "db8e8142-3d4e-413f-99ef-f2a9f644e1b1",
     "group_id": "a7e0cd35"
   }
@@ -46,30 +46,51 @@
 
   Request:
   ```
-  { 
+  {
     "source": "db8e8142-3d4e-413f-99ef-f2a9f644e1b1",
     "destination": "55c21794-95a8-41bc-b320-3f79540a6789"
   }
   ```
-  
-## Internal Policy API
-- GET `/app/:app_guid`
 
-  *as the policy agent running on a diego cell, when a new app with `:app_guid` is created on my cell,
-    then I GET a group_id and a whitelist from this endpoint on the Policy Server, which I will pass on to the policy plugin running on my cell.  I do not need to understand the semantic meaning of the bytes on the wire*
+## Internal Policy API
+
+- GET `/policies?apps=db8e8142-3d4e-413f-99ef-f2a9f644e1b1,76fbc6f3-c265-43e8-88ff-ae5a319bbe96,ceb38016-e568-4571-9274-b6357227815c`
+
+  *as the policy agent running on a diego cell, I need to refresh my policy definitions from the central API server*
+
+  The cell may call this endpoint at a regular interval, when it gets a new app to start, or when hinted by some push-mechanism
 
   Response:
   ```
-  {
-    "group_id": "a7e0cd35",
-    "allowed_group_id": [
-      "a7e0cd35",
-      "7578a0fa"
-    ]
-  }
+  [
+    {
+      "app_id": "db8e8142-3d4e-413f-99ef-f2a9f644e1b1",
+      "group_id": "a7e0cd35",
+      "allowed_group_id": [
+        "a7e0cd35",
+        "7578a0fa"
+      ]
+    },
+    {
+      "app_id": "76fbc6f3-c265-43e8-88ff-ae5a319bbe96",
+      "group_id": "7578a0fa",
+      "allowed_group_id": [
+        "7578a0fa"
+        "2c691882",
+      ]
+    },
+    {
+      "app_id": "ceb38016-e568-4571-9274-b6357227815c",
+      "group_id": "55d5ceb7",
+      "allowed_group_id": [
+        "55d5ceb7",
+      ]
+    }
+  ]
   ```
+
 - some TBD push mechanism as well?  so that Policy Server can inform agents about changes to the whitelist?
-  
+
 ## Policy Plugin API
 
 - POST `/configure`
