@@ -75,15 +75,15 @@
       "app_id": "76fbc6f3-c265-43e8-88ff-ae5a319bbe96",
       "group_id": "7578a0fa",
       "allowed_group_id": [
-        "7578a0fa"
-        "2c691882",
+        "7578a0fa",
+        "2c691882"
       ]
     },
     {
       "app_id": "ceb38016-e568-4571-9274-b6357227815c",
       "group_id": "55d5ceb7",
       "allowed_group_id": [
-        "55d5ceb7",
+        "55d5ceb7"
       ]
     }
   ]
