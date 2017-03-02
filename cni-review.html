@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 {
+        font-family: 'Yanone Kaffeesatz';
+        font-weight: normal;
+      }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# CNI Review
+
+---
+
+# I'm in ur VM
+
+```bash
+root@vagrant:/cni-demo# ip addr
+
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:c3:0a:85 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global enp0s3
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:27ff:fec3:a85/64 scope link
+       valid_lft forever preferred_lft forever
+```
+There are *two* network interfaces.
+
+---
+
+# Make some network namespaces
+
+```bash
+root@vagrant:/cni-demo# ip netns add apricot
+root@vagrant:/cni-demo# ip netns add banana
+root@vagrant:/cni-demo# ip netns list
+banana
+apricot
+```
+
+The `ip netns` utility bind-mounts network namespaces:
+```bash
+ls -lai /var/run/netns/
+```
+
+```
+total 0
+       566 drwxr-xr-x  2 root root  80 Mar  2 19:00 .
+         2 drwxr-xr-x 27 root root 980 Mar  2 19:00 ..
+4026532193 -r--r--r--  1 root root   0 Mar  2 19:00 apricot
+4026532254 -r--r--r--  1 root root   0 Mar  2 19:00 banana
+```
+
+---
+
+# Run a program inside a network namespace
+```
+root@vagrant:/cni-demo# ip netns exec apricot echo hello from \"apricot\"
+
+hello from "apricot"
+```
+
+---
+
+# New network namespaces are empty
+
+Save for a loopback device that is `DOWN`:
+```
+ip netns exec apricot ip link
+
+1: lo: <LOOPBACK> mtu 65536 qdisc noop state DOWN mode DEFAULT group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+```
+
+---
+
+Create a basic "network config" file:
+```bash
+cat loopback.conf
+```
+
+```json
+{
+    "cniVersion": "0.3.0",
+    "type": "loopback"
+}
+```
+
+Set up the "runtime config"
+```bash
+export CNI_COMMAND=ADD
+export CNI_PATH=/go/src/github.com/containernetworking/cni/bin
+export CNI_NETNS=/var/run/netns/apricot
+export CNI_IFNAME=lo
+```
+
+Run it!
+```bash
+$CNI_PATH/loopback < loopback.conf
+```
+
+```json
+{
+    "dns": {}
+}
+```
+
+---
+
+Inspect the namespace again:
+```
+ip netns exec apricot ip link
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+```
+
+It's `UP`!
+
+---
+
+# Let my traffic flow
+
+Write a new network config for the "bridge" plugin
+
+```bash
+cat bridge.conf
+```
+
+```json
+{
+    "name": "some-network-name",
+    "type": "bridge",
+    "isDefaultGateway": true,
+    "ipam": {
+        "type": "host-local",
+        "subnet": "10.255.30.0/24"
+    }
+}
+```
+
+```bash
+export CNI_IFNAME=eth0
+$CNI_PATH/bridge < bridge.conf
+```
+
+---
+# Bridge plugin result
+
+stdout shows
+```json
+{
+    "ip4": {
+        "ip": "10.255.30.2/24",
+        "gateway": "10.255.30.1",
+        "routes": [
+            {
+                "dst": "0.0.0.0/0",
+                "gw": "10.255.30.1"
+            }
+        ]
+    },
+    "dns": {}
+}
+```
+
+and stderr shows:
+
+> 2017/03/02 20:11:54 Error retriving last reserved ip: Failed to retrieve last reserved ip: open /var/lib/cni/networks/some-network-name/last_reserved_ip: no such file or directory
+
+(but that's more of an informational message, not an error, see CNI PR #366)
+
+---
+
+# We've got `eth0` in the container
+```bash
+ip netns exec apricot ip addr
+```
+
+```text
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+7: eth0@if6: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 0a:58:0a:ff:1e:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.255.30.2/24 scope global eth0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::d8e3:8aff:fe63:270/64 scope link
+       valid_lft forever preferred_lft forever
+```
+
+#### and traffic flows
+
+```
+ip netns exec apricot ping -c 3 $HOST_IP
+```
+
+```
+PING 10.0.2.15 (10.0.2.15) 56(84) bytes of data.
+64 bytes from 10.0.2.15: icmp_seq=1 ttl=64 time=0.020 ms
+64 bytes from 10.0.2.15: icmp_seq=2 ttl=64 time=0.029 ms
+64 bytes from 10.0.2.15: icmp_seq=3 ttl=64 time=0.033 ms
+```
+
+---
+
+# On the host: 2 new devices
+```
+ip addr
+```
+
+```
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:c3:0a:85 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global enp0s3
+       valid_lft forever preferred_lft forever
+    inet6 fe80::a00:27ff:fec3:a85/64 scope link
+       valid_lft forever preferred_lft forever
+3: cni0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 0a:58:0a:ff:1e:01 brd ff:ff:ff:ff:ff:ff
+    inet 10.255.30.1/24 scope global cni0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::c095:dbff:fecc:91f4/64 scope link
+       valid_lft forever preferred_lft forever
+6: vethc645c550@if7: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master cni0 state UP group default
+    link/ether 2e:94:78:4f:54:3d brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet6 fe80::2c94:78ff:fe4f:543d/64 scope link
+       valid_lft forever preferred_lft forever
+```
+
+---
+
+# IP address management (IPAM)
+```
+ls -la /var/lib/cni/networks/some-network-name/
+total 12
+drw-r--r-- 2 root root 4096 Mar  2 20:11 .
+drw-r--r-- 6 root root 4096 Mar  2 20:11 ..
+-rw-r--r-- 1 root root    0 Mar  2 20:11 10.255.30.2
+-rw-r--r-- 1 root root   11 Mar  2 20:11 last_reserved_ip
+```
+
+```
+cat /var/lib/cni/networks/some-network-name/last_reserved_ip
+10.255.30.2
+```
+
+---
+
+# Down
+
+```bash
+env | grep CNI
+
+CNI_COMMAND=ADD
+CNI_IFNAME=eth0
+CNI_NETNS=/var/run/netns/apricot
+CNI_PATH=/go/src/github.com/containernetworking/cni/bin
+```
+
+```bash
+export CNI_COMMAND=DEL
+$CNI_PATH/bridge < bridge.conf
+```
+
+```
+ip netns exec apricot ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+```
+
+```
+ls /var/lib/cni/networks/some-network-name/
+last_reserved_ip
+```
+
+---
+
+# Thought experiment
+
+- What happens if you run 
+```bash
+ip netns del apricot
+```
+without first running CNI DOWN?
+
+    </textarea>
+    <script src="https://gnab.github.io/remark/downloads/remark-latest.min.js">
+    </script>
+    <script>
+      var slideshow = remark.create();
+    </script>
+  </body>
+</html>
