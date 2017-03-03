@@ -37,6 +37,8 @@ included data like
 Then the enforcement mechanism could ensure that, for example, the global policies were written
 only once but applied to all containers.
 
+Alternately, rules with similar structure (e.g. same destination port ranges, and/or same destination ips) could be deduplicated by the enforcement agent.  But then the chain structure below would look different.
+
 ## Example rule set
 ```
 -A FORWARD -s 10.255.100.0/24 -j cfn-fw
