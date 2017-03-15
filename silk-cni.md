@@ -12,6 +12,9 @@ export container_interface=eth0
 export host_interface=s-$id
 export host_ip=169.254.0.1
 
+ip netns add $namespace
+ip netns exec $namespace ip link set lo up
+
 ip link add $host_interface type veth peer name eth0
 
 host_mac_addr="$(cat "/sys/class/net/$host_interface/address")"
@@ -33,9 +36,9 @@ sysctl -q -w "net.ipv4.conf.${host_interface}.forwarding=1"  # enable host forwa
 ip netns exec $namespace bash -c "
   set -e -x -u
   ip link set eth0 up
-	ip -4 address add $container_ip peer $host_ip/32 dev eth0  # set up PtP inside container
-	ip -4 neighbour replace $host_ip lladdr $host_mac_addr nud permanent dev eth0  # permanent ARP rule
-	ip -4 route add default via $host_ip dev eth0  # default route to host-veth
-	sysctl -q -w "net.ipv6.conf.eth0.disable_ipv6=1"
+  ip -4 address add $container_ip peer $host_ip/32 dev eth0  # set up PtP inside container
+  ip -4 neighbour replace $host_ip lladdr $host_mac_addr nud permanent dev eth0  # permanent ARP rule
+  ip -4 route add default via $host_ip dev eth0  # default route to host-veth
+  sysctl -q -w "net.ipv6.conf.eth0.disable_ipv6=1"
 "
 ```
