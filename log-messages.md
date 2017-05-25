@@ -11,16 +11,16 @@ For ingress traffic on the overlay network:
 ```
 {
   "timestamp": "1495732374.512016535",
-	"source": "network-log-forwarder",
-	"message": "ingress-allowed",
-	"log_level": 1,
-	"data": {
-		"destination": {
-			"container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
-			"app_guid": "c5836386-b934-424a-8d93-5894115b3130",
-			"space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
-			"organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
-		},
+  "source": "network-log-forwarder",
+  "message": "ingress-allowed",
+  "log_level": 1,
+  "data": {
+    "destination": {
+      "container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
+      "app_guid": "c5836386-b934-424a-8d93-5894115b3130",
+      "space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
+      "organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
+    },
     "packet": {
       "src_ip": "10.255.15.7",
       "src_port": 35236,
@@ -29,7 +29,7 @@ For ingress traffic on the overlay network:
       "protocol": "tcp",
       "mark": "0x2"
     }
-	}
+  }
 }
 ```
 
@@ -38,16 +38,16 @@ For egress traffic not on the overlay network:
 ```
 {
   "timestamp": "1495732374.512016535",
-	"source": "network-log-forwarder",
-	"message": "egress-allowed",
-	"log_level": 1,
-	"data": {
-		"source": {
-			"container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
-			"app_guid": "c5836386-b934-424a-8d93-5894115b3130",
-			"space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
-			"organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
-		},
+  "source": "network-log-forwarder",
+  "message": "egress-allowed",
+  "log_level": 1,
+  "data": {
+    "source": {
+      "container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
+      "app_guid": "c5836386-b934-424a-8d93-5894115b3130",
+      "space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
+      "organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
+    },
     "packet": {
       "src_ip": "10.255.15.7",
       "src_port": 35236,
@@ -56,7 +56,7 @@ For egress traffic not on the overlay network:
       "protocol": "tcp",
       "mark": "0x2"
     }
-	}
+  }
 }
 ```
 
@@ -137,16 +137,16 @@ TCP
 ```
 {
   "timestamp": "1495732374.512016535",
-	"source": "network-log-forwarder",
-	"message": "ingress-allowed",
-	"log_level": 1,
-	"data": {
-		"destination": {
-			"container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
-			"app_guid": "c5836386-b934-424a-8d93-5894115b3130",
-			"space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
-			"organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
-		},
+  "source": "network-log-forwarder",
+  "message": "ingress-allowed",
+  "log_level": 1,
+  "data": {
+    "destination": {
+      "container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
+      "app_guid": "c5836386-b934-424a-8d93-5894115b3130",
+      "space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
+      "organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
+    },
     "packet": {
       "src_ip": "10.255.15.7",
       "src_port": 35236,
@@ -155,7 +155,7 @@ TCP
       "protocol": "tcp",
       "mark": "0x2"
     }
-	}
+  }
 }
 ```
 
@@ -166,16 +166,16 @@ TCP
 ```
 {
   "timestamp": "1495732374.512016535",
-	"source": "network-log-forwarder",
-	"message": "egress-allowed",
-	"log_level": 1,
-	"data": {
-		"source": {
-			"container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
-			"app_guid": "c5836386-b934-424a-8d93-5894115b3130",
-			"space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
-			"organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
-		},
+  "source": "network-log-forwarder",
+  "message": "egress-allowed",
+  "log_level": 1,
+  "data": {
+    "source": {
+      "container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
+      "app_guid": "c5836386-b934-424a-8d93-5894115b3130",
+      "space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
+      "organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
+    },
     "packet": {
       "src_ip": "10.255.15.7",
       "src_port": 35236,
@@ -184,7 +184,7 @@ TCP
       "protocol": "tcp",
       "mark": "0x2"
     }
-	}
+  }
 }
 ```
 
@@ -193,16 +193,16 @@ UDP
 ```
 {
   "timestamp": "1495732374.512016535",
-	"source": "network-log-forwarder",
-	"message": "egress-allowed",
-	"log_level": 1,
-	"data": {
-		"source": {
-			"container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
-			"app_guid": "c5836386-b934-424a-8d93-5894115b3130",
-			"space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
-			"organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
-		},
+  "source": "network-log-forwarder",
+  "message": "egress-allowed",
+  "log_level": 1,
+  "data": {
+    "source": {
+      "container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
+      "app_guid": "c5836386-b934-424a-8d93-5894115b3130",
+      "space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
+      "organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
+    },
     "packet": {
       "src_ip": "10.255.15.7",
       "src_port": 35236,
@@ -211,7 +211,7 @@ UDP
       "protocol": "udp",
       "mark": "0x2"
     }
-	}
+  }
 }
 ```
 
@@ -220,16 +220,16 @@ ICMP
 ```
 {
   "timestamp": "1495732374.512016535",
-	"source": "network-log-forwarder",
-	"message": "egress-allowed",
-	"log_level": 1,
-	"data": {
-		"source": {
-			"container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
-			"app_guid": "c5836386-b934-424a-8d93-5894115b3130",
-			"space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
-			"organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
-		},
+  "source": "network-log-forwarder",
+  "message": "egress-allowed",
+  "log_level": 1,
+  "data": {
+    "source": {
+      "container_id": "ffec8b0f-bdcf-42e7-7a89-f01e",
+      "app_guid": "c5836386-b934-424a-8d93-5894115b3130",
+      "space_guid": "8bd0678d-c5fd-4991-8a5c-a75c75440e0b",
+      "organization_guid": "d95a6357-6124-48fe-80f9-c8ff6c250a6e"
+    },
     "packet": {
       "src_ip": "10.255.15.7",
       "dst_ip": "173.294.210.139",
@@ -238,8 +238,6 @@ ICMP
       "code": 0,
       "mark": "0x2"
     }
-	}
+  }
 }
 ```
-
-
