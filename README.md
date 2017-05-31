@@ -1,11 +1,5 @@
 # container-networking-notes
 
-rough, early draft, crazy ideas about where we might go with OSS Container Networking efforts.
+Technical design and research results from the open source Cloud Foundry Container Networking effort.
 
-* [Policy](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/policy.md):
-Description of ways we could enforce policy
-* The [Why](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/why-extract-api.md) and [How](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/how-extract-api.md) of extracting Network functionality from the Garden API
-* [Internal Routes](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/internal-routes.md):
-A proposal for creating names for service discovery of apps deployed to cloudfoundry
-* [External Services](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/external-services.md):
-A description of ways apps will need to connect to things that are not apps, such as databases outside of the CF cluster or services deployed by BOSH.
+To see our networking component for Cloud Foundry, see [CF Networking Release](https://github.com/cloudfoundry-incubator/cf-networking-release).
