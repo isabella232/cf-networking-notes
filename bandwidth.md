@@ -69,6 +69,27 @@ cf ssh proxy -i 0 -c 'curl http://httpbin.org/stream/100000'
 tc qdisc add dev ${network_host_iface} root tbf rate ${RATE}bit burst ${BURST} latency 100ms
 ```
 
+### What is burst and rate?
+
+Burst (also known as buffer) is the maximum amount of bytes that can be held in the buffer when throttling.
+After the burst size is reached, bytes may be dropped.
+
+Latency is the maximum amount of time a packet can sit in the buffer.
+
+Rate is the speed knob and what we usually care most about.
+It limits the amount of bytes that can be be transferred per second.
+
+By default burst and rate are in units of bytes, but in the example above we set our RATE parameter to use units of bits.
+
+Below is an example of how these values may relate to a request of a given size.
+```
+burst is 10000 bytes
+latency is 100 ms
+rate is 320000 bits = 40000 bytes/second
+size is 20000 bytes
+time to 20000 bytes / (40000 bytes/second) = 500 ms
+```
+
 ### Explaination:
 
 * For container ingress (host egress to container), we can easily limit with the normal
