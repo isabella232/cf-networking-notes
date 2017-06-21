@@ -10,9 +10,9 @@
   easily shape (container ingress / host egress) on the host veth pair in the
   host namespace.
 * Linux generally can't directly perform traffic shaping on ingress data
-  without dropping packets, and we cannot touch the container namespace. We
-  need to find a way to shape i.e. throttle (container egress / host ingress)
-  without touching the container.
+  without dropping packets, and do not want the bandwidth limiting to be modifiable
+  within the container namespace.  So we need to find a way to shape i.e. throttle
+  (container egress / host ingress) from outside the container.
 
 ### Test setup:
 ```
