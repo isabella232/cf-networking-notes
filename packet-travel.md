@@ -9,9 +9,10 @@ Application container connecting to another application container on a different
 4. Packet has source IP matching eth0 device of the container
 5. Packet reaches the host side of the veth device
 6. Route for the matching destination subnet has the VTEP device of the source and destination host
-7. Neighbor rule for the destination VTEP resolves it's MAC address
-8. ARP rule for the destination MAC resolves it's underlay IP address (the IP address of eth0 on the destination host)
-9. VTEP encapulates traffic with the destination 
+7. ARP rule for the destination VTEP resolves it's MAC address
+8. FDB rule for the destination MAC resolves to the outgoing VTEP device and destination underlay IP address (the IP address of eth0 on the destination host)
+9. VTEP encapulates traffic with the destination and sends it as UDP on port 4789 to the destination underlay IP
+10. On the destination VM, the packet is received on eth0, port 4789
 
 
 ## Inside the Source Application Container
@@ -105,10 +106,11 @@ ip route list 10.255.43.0/24
 10.255.43.0/24 via 10.255.43.0 dev silk-vtep  src 10.255.108.0
 ```
 
-## Neighbor rule for VTEP
+## ARP rule for VTEP
 
-The neighbor rule for the destination VTEP IP address resolves it's MAC address,
-which is based on it's IP with an `ee:ee:` prefix:
+The ARP rule for the destination VTEP IP address determines the destination
+which MAC address that will be written into the ethernet frame for packets that
+are detined to that IP address:
 
 ```
 ip neigh show to 10.255.43.0
@@ -117,9 +119,10 @@ ip neigh show to 10.255.43.0
 10.255.43.0 dev silk-vtep lladdr ee:ee:0a:ff:2b:00 PERMANENT
 ```
 
-## ARP rule for the destination MAC address
+## FDB rule for the destination MAC address
 
-The ARP rule for the destination MAC address resolves the destination host's underlay IP address:
+The FDB rule for the destination MAC address resolves the destination host's underlay IP address,
+and the device name of the VXLAN Tunnel Endpoint (VTEP) outgoing interface (`silk-vtep` in this case).
 
 ```
 bridge fdb show | grep ee:ee:0a:ff:2b:00
@@ -133,7 +136,7 @@ ee:ee:0a:ff:2b:00 dev silk-vtep dst 10.0.16.14 self permanent
 The
 
 ```bash
-ip -d link silk-vtep
+ip -d link show silk-vtep
 
 # output
 865: silk-vtep: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1410 qdisc noqueue state UNKNOWN mode DEFAULT group default
@@ -148,3 +151,69 @@ curl -o /tmp/iproute2.deb -L http://mirrors.kernel.org/ubuntu/pool/main/i/iprout
 curl -o /tmp/libmnl0.deb -L http://mirrors.kernel.org/ubuntu/pool/main/libm/libmnl/libmnl0_1.0.3-5_amd64.deb
 dpkg -i /tmp/*.deb
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+## Packet capture from all devices for a request across hosts
+
+
+
+### Source sends packet on port 4789
+
+```
+# tcpdump -T vxlan -v -XX -i eth0 dst port 4789
+23:29:09.212241 IP (tos 0x0, ttl 64, id 57022, offset 0, flags [none], proto UDP (17), length 110)
+    diego-cell-0.node.dc1.cf.internal.37151 > diego-cell-1.node.dc1.cf.internal.4789: VXLAN, flags [I] (0x88), vni 1
+IP (tos 0x0, ttl 63, id 56269, offset 0, flags [DF], proto TCP (6), length 60)
+    10.255.45.3.58492 > 10.255.115.40.http-alt: Flags [S], cksum 0x7b1c (correct), seq 1911844672, win 27400, options [mss 1370,sackOK,TS val 306033805 ecr 0,nop,wscale 7], length 0
+	0x0000:  4201 0a00 0001 4201 0a00 100f 0800 4500  B.....B.......E.
+	0x0010:  006e debe 0000 4011 57a5 0a00 100f 0a00  .n....@.W.......
+	0x0020:  200d 911f 12b5 005a 0000 8800 0001 0000  .......Z........
+	0x0030:  0100 eeee 0aff 7300 eeee 0aff 2d00 0800  ......s.....-...
+	0x0040:  4500 003c dbcd 4000 3f06 a9c5 0aff 2d03  E..<..@.?.....-.
+	0x0050:  0aff 7328 e47c 1f90 71f4 6f40 0000 0000  ..s(.|..q.o@....
+	0x0060:  a002 6b08 7b1c 0000 0204 055a 0402 080a  ..k.{......Z....
+	0x0070:  123d b48d 0000 0000 0103 0307            .=..........
+```
+
+### Destination receives packet on port 4789
+
+```
+# tcpdump -T vxlan -v -XX -i eth0 dst port 4789
+23:29:09.211784 IP (tos 0x0, ttl 64, id 57022, offset 0, flags [none], proto UDP (17), length 110)
+    diego-cell-0.node.dc1.cf.internal.37151 > diego-cell-1.node.dc1.cf.internal.4789: VXLAN, flags [I] (0x88), vni 1
+IP (tos 0x0, ttl 63, id 56269, offset 0, flags [DF], proto TCP (6), length 60)
+    10.255.45.3.58492 > 10.255.115.40.http-alt: Flags [S], cksum 0x7b1c (correct), seq 1911844672, win 27400, options [mss 1370,sackOK,TS val 306033805 ecr 0,nop,wscale 7], length 0
+	0x0000:  4201 0a00 200d 4201 0a00 0001 0800 4500  B.....B.......E.
+	0x0010:  006e debe 0000 4011 57a5 0a00 100f 0a00  .n....@.W.......
+	0x0020:  200d 911f 12b5 005a 0000 8800 0001 0000  .......Z........
+	0x0030:  0100 eeee 0aff 7300 eeee 0aff 2d00 0800  ......s.....-...
+	0x0040:  4500 003c dbcd 4000 3f06 a9c5 0aff 2d03  E..<..@.?.....-.
+	0x0050:  0aff 7328 e47c 1f90 71f4 6f40 0000 0000  ..s(.|..q.o@....
+	0x0060:  a002 6b08 7b1c 0000 0204 055a 0402 080a  ..k.{......Z....
+	0x0070:  123d b48d 0000 0000 0103 0307            .=..........
+```
+
+### Decapsulated packet on silk-vtep device
+
+```
+# tcpdump -T vxlan -v -XX -i silk-vtep
+23:31:18.729654 IP (tos 0x0, ttl 63, id 56083, offset 0, flags [DF], proto TCP (6), length 60)
+    10.255.45.3.58582 > 10.255.115.40.http-alt: Flags [S], cksum 0xd1d5 (correct), seq 596305947, win 27400, options [mss 1370,sackOK,TS val 306066184 ecr 0,nop,wscale 7], length 0
+	0x0000:  eeee 0aff 7300 eeee 0aff 2d00 0800 4500  ....s.....-...E.
+	0x0010:  003c db13 4000 3f06 aa7f 0aff 2d03 0aff  .<..@.?.....-...
+	0x0020:  7328 e4d6 1f90 238a e81b 0000 0000 a002  s(....#.........
+	0x0030:  6b08 d1d5 0000 0204 055a 0402 080a 123e  k........Z.....>
+	0x0040:  3308 0000 0000 0103 0307                 3.........
+```
+
+
