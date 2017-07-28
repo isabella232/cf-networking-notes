@@ -162,6 +162,12 @@ dpkg -i /tmp/*.deb
 
 ## Packet capture from all devices for a request across hosts
 
+The example below shows a packet captured with tcpdump as it
+travels from a container on one host to a container on another host, along
+with steps for how to try this yourself.
+
+You can also check out [this video recording](https://drive.google.com/file/d/0B7QsTXCd12uWMTZsWkQ4T3Z0SmM/view?usp=sharing) demonstrating the same.
+
 Create policy to allow connections on port 7777
 
 ```
