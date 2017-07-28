@@ -9,7 +9,12 @@ Application container connecting to another application container on a different
 7. ARP rule for the destination VTEP resolves it's MAC address
 8. FDB rule for the destination MAC resolves to the outgoing VTEP device and destination underlay IP address (the IP address of eth0 on the destination host)
 9. VTEP encapulates traffic with the destination and sends it as UDP on port 4789 to the destination underlay IP
-10. On the destination VM, the packet is received on eth0, port 4789
+10. On the destination VM, the UDP packet encapsulating the original packet is received on eth0, port 4789
+11. The destination VTEP is listening on port 4789.  It receives the traffic and decapsulates it.
+12. The destination IP address of the decapsulated packet is the IP address of the destination container.
+13. A route matching the destination container IP address has the host peer of the container veth device
+14. A neighbor rule associates the container IP with it's MAC address (beginning with `ee:ee`)
+15. Packet is sent out the host peer veth device reaching the destination container
 
 
 ## Inside the Source Application Container
