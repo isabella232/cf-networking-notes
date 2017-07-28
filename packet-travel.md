@@ -187,17 +187,20 @@ Start up tcpdump sessions on all devices in the pathway.
 `bosh ssh` to both diego cells and do the following:
 
 ```
-# host eth0 device on port 4789
+# host eth0 device
 tcpdump -T vxlan -v -XX -i eth0 dst port 4789
 
-# silk-vtep device on port 4789
+# host VTEP device
 tcpdump -T vxlan -v -XX -i eth0 dst port 4789
 
+# host veth device (host peer in host-container veth pair)
+tcpdump -v -XX -i s-010255132002 dst port 7777
+
+# container eth0 device (container peer in host-container veth pair)
+# then you can listen on the container eth0 device on port 7777
 # create a symlink for the network namespace of the container
 mkdir /var/run/netns
 ln -s /var/vcap/garden-cni/container-netns/$handle /var/run/netns/s-010255132002
-
-# then you can listen on the container eth0 device on port 7777
 ip netns exec s-010255132002 tcpdump -v -XX -i eth0 dst port 7777
 ```
 
@@ -212,99 +215,137 @@ Hit enter.
 ### Source container eth0 device
 
 ```
-diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# ip netns exec s-010255099003 tcpdump -v -XX -i eth0 dst port 7777
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# # Source container eth0
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# ip netns exec s-010255132002 tcpdump -v -XX -i eth0 dst port 7777
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
-^C03:51:59.607085 IP (tos 0x0, ttl 64, id 39442, offset 0, flags [DF], proto TCP (6), length 77)
-    10.255.99.3.56766 > 10.255.132.2.7777: Flags [P.], cksum 0xfd42 (incorrect -> 0x0fc9), seq 2356689519:2356689544, ack 2161316842, win 215, options [nop,nop,TS val 530639 ecr 679117], length 25
-	0x0000:  aaaa 0aff 6303 eeee 0aff 6303 0800 4500  ....c.....c...E.
-	0x0010:  004d 9a12 4000 4006 a395 0aff 6303 0aff  .M..@.@.....c...
-	0x0020:  8402 ddbe 1e61 8c78 3a6f 80d3 13ea 8018  .....a.x:o......
-	0x0030:  00d7 fd42 0000 0101 080a 0008 18cf 000a  ...B............
-	0x0040:  5ccd 6366 2d6e 6574 776f 726b 696e 6720  \.cf-networking.
+^C17:22:02.618390 IP (tos 0x0, ttl 64, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0xfd42 (incorrect -> 0x1bf4), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  aaaa 0aff 8402 eeee 0aff 8402 0800 4500  ..............E.
+	0x0010:  004d 2872 4000 4006 1536 0aff 8402 0aff  .M(r@.@..6......
+	0x0020:  6303 b790 1e61 52cf 23fa 2222 c4a8 8018  c....aR.#.""....
+	0x0030:  00d7 fd42 0000 0101 080a 00c6 b8bb 00c0  ...B............
+	0x0040:  d380 6366 2d6e 6574 776f 726b 696e 6720  ..cf-networking.
+	0x0050:  7769 7468 2073 696c 6b21 0a              with.silk!.
+```
+
+### Source host veth peer
+
+```
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# # Source host veth peer
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# tcpdump -v -XX -i s-010255132002 dst port 7777
+tcpdump: listening on s-010255132002, link-type EN10MB (Ethernet), capture size 262144 bytes
+17:22:02.618403 IP (tos 0x0, ttl 64, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0xfd42 (incorrect -> 0x1bf4), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  aaaa 0aff 8402 eeee 0aff 8402 0800 4500  ..............E.
+	0x0010:  004d 2872 4000 4006 1536 0aff 8402 0aff  .M(r@.@..6......
+	0x0020:  6303 b790 1e61 52cf 23fa 2222 c4a8 8018  c....aR.#.""....
+	0x0030:  00d7 fd42 0000 0101 080a 00c6 b8bb 00c0  ...B............
+	0x0040:  d380 6366 2d6e 6574 776f 726b 696e 6720  ..cf-networking.
 	0x0050:  7769 7468 2073 696c 6b21 0a              with.silk!.
 ```
 
 ### Source host VTEP device
 
 ```
-diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# tcpdump -T vxlan -v -XX -i silk-vtep
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# # Source host VTEP
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# tcpdump -T vxlan -v -XX -i silk-vtep
 tcpdump: listening on silk-vtep, link-type EN10MB (Ethernet), capture size 262144 bytes
-03:51:59.607108 IP (tos 0x0, ttl 63, id 39442, offset 0, flags [DF], proto TCP (6), length 77)
-    10.255.99.3.56766 > 10.255.132.2.7777: Flags [P.], cksum 0xfd42 (incorrect -> 0x0fc9), seq 2356689519:2356689544, ack 2161316842, win 215, options [nop,nop,TS val 530639 ecr 679117], length 25
-	0x0000:  eeee 0aff 8400 eeee 0aff 6300 0800 4500  ..........c...E.
-	0x0010:  004d 9a12 4000 3f06 a495 0aff 6303 0aff  .M..@.?.....c...
-	0x0020:  8402 ddbe 1e61 8c78 3a6f 80d3 13ea 8018  .....a.x:o......
-	0x0030:  00d7 fd42 0000 0101 080a 0008 18cf 000a  ...B............
-	0x0040:  5ccd 6366 2d6e 6574 776f 726b 696e 6720  \.cf-networking.
+17:22:02.618415 IP (tos 0x0, ttl 63, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0xfd42 (incorrect -> 0x1bf4), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  eeee 0aff 6300 eeee 0aff 8400 0800 4500  ....c.........E.
+	0x0010:  004d 2872 4000 3f06 1636 0aff 8402 0aff  .M(r@.?..6......
+	0x0020:  6303 b790 1e61 52cf 23fa 2222 c4a8 8018  c....aR.#.""....
+	0x0030:  00d7 fd42 0000 0101 080a 00c6 b8bb 00c0  ...B............
+	0x0040:  d380 6366 2d6e 6574 776f 726b 696e 6720  ..cf-networking.
 	0x0050:  7769 7468 2073 696c 6b21 0a              with.silk!.
 ```
 
 ### Source host eth0 device
 
 ```
-diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# tcpdump -T vxlan -v -XX -i eth0 dst port 4789
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# # Source host eth0
+diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# tcpdump -T vxlan -v -XX -i eth0 dst port 4789
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
-03:51:59.607140 IP (tos 0x0, ttl 64, id 37823, offset 0, flags [none], proto UDP (17), length 127)
-    diego-cell-0.node.dc1.cf.internal.36821 > diego-cell-1.node.dc1.cf.internal.4789: VXLAN, flags [I] (0x88), vni 1
-IP (tos 0x0, ttl 63, id 39442, offset 0, flags [DF], proto TCP (6), length 77)
-    10.255.99.3.56766 > 10.255.132.2.7777: Flags [P.], cksum 0x0fc9 (correct), seq 2356689519:2356689544, ack 2161316842, win 215, options [nop,nop,TS val 530639 ecr 679117], length 25
-	0x0000:  4201 0a00 0001 4201 0a00 1010 0800 4500  B.....B.......E.
-	0x0010:  007f 93bf 0000 4011 a291 0a00 1010 0a00  ......@.........
-	0x0020:  200e 8fd5 12b5 006b 0000 8800 0001 0000  .......k........
-	0x0030:  0100 eeee 0aff 8400 eeee 0aff 6300 0800  ............c...
-	0x0040:  4500 004d 9a12 4000 3f06 a495 0aff 6303  E..M..@.?.....c.
-	0x0050:  0aff 8402 ddbe 1e61 8c78 3a6f 80d3 13ea  .......a.x:o....
-	0x0060:  8018 00d7 0fc9 0000 0101 080a 0008 18cf  ................
-	0x0070:  000a 5ccd 6366 2d6e 6574 776f 726b 696e  ..\.cf-networkin
+17:22:02.618449 IP (tos 0x0, ttl 64, id 33780, offset 0, flags [none], proto UDP (17), length 127)
+    diego-cell-1.node.dc1.cf.internal.36840 > diego-cell-0.node.dc1.cf.internal.4789: VXLAN, flags [I] (0x88), vni 1
+IP (tos 0x0, ttl 63, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0x1bf4 (correct), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  4201 0a00 0001 4201 0a00 200e 0800 4500  B.....B.......E.
+	0x0010:  007f 83f4 0000 4011 b25c 0a00 200e 0a00  ......@..\......
+	0x0020:  1010 8fe8 12b5 006b 0000 8800 0001 0000  .......k........
+	0x0030:  0100 eeee 0aff 6300 eeee 0aff 8400 0800  ......c.........
+	0x0040:  4500 004d 2872 4000 3f06 1636 0aff 8402  E..M(r@.?..6....
+	0x0050:  0aff 6303 b790 1e61 52cf 23fa 2222 c4a8  ..c....aR.#.""..
+	0x0060:  8018 00d7 1bf4 0000 0101 080a 00c6 b8bb  ................
+	0x0070:  00c0 d380 6366 2d6e 6574 776f 726b 696e  ....cf-networkin
 	0x0080:  6720 7769 7468 2073 696c 6b21 0a         g.with.silk!.
 ```
 
 ### Destination host eth0 device
 
 ```
-diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# tcpdump -T vxlan -v -XX -i eth0 dst port 4789
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# # Destination host eth0
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# tcpdump -T vxlan -v -XX -i eth0 dst port 4789
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
-03:51:59.622806 IP (tos 0x0, ttl 64, id 37823, offset 0, flags [none], proto UDP (17), length 127)
-    diego-cell-0.node.dc1.cf.internal.36821 > diego-cell-1.node.dc1.cf.internal.4789: VXLAN, flags [I] (0x88), vni 1
-IP (tos 0x0, ttl 63, id 39442, offset 0, flags [DF], proto TCP (6), length 77)
-    10.255.99.3.56766 > 10.255.132.2.7777: Flags [P.], cksum 0x0fc9 (correct), seq 2356689519:2356689544, ack 2161316842, win 215, options [nop,nop,TS val 530639 ecr 679117], length 25
-	0x0000:  4201 0a00 200e 4201 0a00 0001 0800 4500  B.....B.......E.
-	0x0010:  007f 93bf 0000 4011 a291 0a00 1010 0a00  ......@.........
-	0x0020:  200e 8fd5 12b5 006b 0000 8800 0001 0000  .......k........
-	0x0030:  0100 eeee 0aff 8400 eeee 0aff 6300 0800  ............c...
-	0x0040:  4500 004d 9a12 4000 3f06 a495 0aff 6303  E..M..@.?.....c.
-	0x0050:  0aff 8402 ddbe 1e61 8c78 3a6f 80d3 13ea  .......a.x:o....
-	0x0060:  8018 00d7 0fc9 0000 0101 080a 0008 18cf  ................
-	0x0070:  000a 5ccd 6366 2d6e 6574 776f 726b 696e  ..\.cf-networkin
+17:22:02.608247 IP (tos 0x0, ttl 64, id 33780, offset 0, flags [none], proto UDP (17), length 127)
+    diego-cell-1.node.dc1.cf.internal.36840 > diego-cell-0.node.dc1.cf.internal.4789: VXLAN, flags [I] (0x88), vni 1
+IP (tos 0x0, ttl 63, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0x1bf4 (correct), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  4201 0a00 1010 4201 0a00 0001 0800 4500  B.....B.......E.
+	0x0010:  007f 83f4 0000 4011 b25c 0a00 200e 0a00  ......@..\......
+	0x0020:  1010 8fe8 12b5 006b 0000 8800 0001 0000  .......k........
+	0x0030:  0100 eeee 0aff 6300 eeee 0aff 8400 0800  ......c.........
+	0x0040:  4500 004d 2872 4000 3f06 1636 0aff 8402  E..M(r@.?..6....
+	0x0050:  0aff 6303 b790 1e61 52cf 23fa 2222 c4a8  ..c....aR.#.""..
+	0x0060:  8018 00d7 1bf4 0000 0101 080a 00c6 b8bb  ................
+	0x0070:  00c0 d380 6366 2d6e 6574 776f 726b 696e  ....cf-networkin
 	0x0080:  6720 7769 7468 2073 696c 6b21 0a         g.with.silk!.
 ```
 
 ### Destination host VTEP device
 
 ```
-diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# tcpdump -T vxlan -v -XX -i silk-vtep
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# # Destination host VTEP
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# tcpdump -T vxlan -v -XX -i silk-vtep
 tcpdump: listening on silk-vtep, link-type EN10MB (Ethernet), capture size 262144 bytes
-03:51:59.622887 IP (tos 0x0, ttl 63, id 39442, offset 0, flags [DF], proto TCP (6), length 77)
-    10.255.99.3.56766 > 10.255.132.2.7777: Flags [P.], cksum 0x0fc9 (correct), seq 2356689519:2356689544, ack 2161316842, win 215, options [nop,nop,TS val 530639 ecr 679117], length 25
-	0x0000:  eeee 0aff 8400 eeee 0aff 6300 0800 4500  ..........c...E.
-	0x0010:  004d 9a12 4000 3f06 a495 0aff 6303 0aff  .M..@.?.....c...
-	0x0020:  8402 ddbe 1e61 8c78 3a6f 80d3 13ea 8018  .....a.x:o......
-	0x0030:  00d7 0fc9 0000 0101 080a 0008 18cf 000a  ................
-	0x0040:  5ccd 6366 2d6e 6574 776f 726b 696e 6720  \.cf-networking.
+17:22:02.608313 IP (tos 0x0, ttl 63, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0x1bf4 (correct), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  eeee 0aff 6300 eeee 0aff 8400 0800 4500  ....c.........E.
+	0x0010:  004d 2872 4000 3f06 1636 0aff 8402 0aff  .M(r@.?..6......
+	0x0020:  6303 b790 1e61 52cf 23fa 2222 c4a8 8018  c....aR.#.""....
+	0x0030:  00d7 1bf4 0000 0101 080a 00c6 b8bb 00c0  ................
+	0x0040:  d380 6366 2d6e 6574 776f 726b 696e 6720  ..cf-networking.
+	0x0050:  7769 7468 2073 696c 6b21 0a              with.silk!.
+```
+
+### Destination host veth peer
+
+```
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# # Destination host veth peer
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# tcpdump -v -XX -i s-010255099003 dst port 7777
+tcpdump: listening on s-010255099003, link-type EN10MB (Ethernet), capture size 262144 bytes
+17:22:02.608345 IP (tos 0x0, ttl 62, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0x1bf4 (correct), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  eeee 0aff 6303 aaaa 0aff 6303 0800 4500  ....c.....c...E.
+	0x0010:  004d 2872 4000 3e06 1736 0aff 8402 0aff  .M(r@.>..6......
+	0x0020:  6303 b790 1e61 52cf 23fa 2222 c4a8 8018  c....aR.#.""....
+	0x0030:  00d7 1bf4 0000 0101 080a 00c6 b8bb 00c0  ................
+	0x0040:  d380 6366 2d6e 6574 776f 726b 696e 6720  ..cf-networking.
 	0x0050:  7769 7468 2073 696c 6b21 0a              with.silk!.
 ```
 
 ### Destination container eth0 device
 
 ```
-diego-cell/7e9e15d5-454e-482e-a6f0-fc51e36b8941:~# ip netns exec s-010255132002 tcpdump -v -XX -i eth0 dst port 7777
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# # Destination container eth0
+diego-cell/c9d07dce-66a5-4f0a-88cc-b11cf205a138:~# ip netns exec s-010255099003 tcpdump -v -XX -i eth0 dst port 7777
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes
-^C03:51:59.622918 IP (tos 0x0, ttl 62, id 39442, offset 0, flags [DF], proto TCP (6), length 77)
-    10.255.99.3.56766 > 10.255.132.2.7777: Flags [P.], cksum 0x0fc9 (correct), seq 2356689519:2356689544, ack 2161316842, win 215, options [nop,nop,TS val 530639 ecr 679117], length 25
-	0x0000:  eeee 0aff 8402 aaaa 0aff 8402 0800 4500  ..............E.
-	0x0010:  004d 9a12 4000 3e06 a595 0aff 6303 0aff  .M..@.>.....c...
-	0x0020:  8402 ddbe 1e61 8c78 3a6f 80d3 13ea 8018  .....a.x:o......
-	0x0030:  00d7 0fc9 0000 0101 080a 0008 18cf 000a  ................
-	0x0040:  5ccd 6366 2d6e 6574 776f 726b 696e 6720  \.cf-networking.
+^C17:22:02.608358 IP (tos 0x0, ttl 62, id 10354, offset 0, flags [DF], proto TCP (6), length 77)
+    10.255.132.2.46992 > 10.255.99.3.7777: Flags [P.], cksum 0x1bf4 (correct), seq 1389306874:1389306899, ack 572703912, win 215, options [nop,nop,TS val 13023419 ecr 12637056], length 25
+	0x0000:  eeee 0aff 6303 aaaa 0aff 6303 0800 4500  ....c.....c...E.
+	0x0010:  004d 2872 4000 3e06 1736 0aff 8402 0aff  .M(r@.>..6......
+	0x0020:  6303 b790 1e61 52cf 23fa 2222 c4a8 8018  c....aR.#.""....
+	0x0030:  00d7 1bf4 0000 0101 080a 00c6 b8bb 00c0  ................
+	0x0040:  d380 6366 2d6e 6574 776f 726b 696e 6720  ..cf-networking.
 	0x0050:  7769 7468 2073 696c 6b21 0a              with.silk!.
 ```
