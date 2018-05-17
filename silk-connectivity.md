@@ -19,8 +19,8 @@ ipToMACAddr() {
 }
 
 getIPForDevice() {
-  deviceName="$1"
-	ip addr list dev $deviceName | grep inet | awk '{print $2}' | head -n 1 | cut -d '/' -f1)
+	deviceName="$1"
+	ip addr list dev $deviceName | grep inet | awk '{print $2}' | head -n 1 | cut -d '/' -f1
 }
 
 setup_vtep() {
@@ -50,27 +50,27 @@ setup_vtep() {
 
 add_remote_host() {
 	remoteVTEPOverlayIP="$1" # e.g. 10.255.48.0
-  remoteUnderlayIP="$2" # e.g. 10.244.0.48
+	remoteUnderlayIP="$2" # e.g. 10.244.0.48
 
 	vtepDeviceName="silk-vtep"
-  remoteVTEPOverlayMAC=$(ipToMACAddr $remoteVTEPOverlayIP)
-  remoteOverlaySubnet="$remoteVTEPOverlayIP/24"
+	remoteVTEPOverlayMAC=$(ipToMACAddr $remoteVTEPOverlayIP)
+	remoteOverlaySubnet="$remoteVTEPOverlayIP/24"
 	localVTEPOverlayIP="$(getIPForDevice $vtepDeviceName)"
 
-  echo "adding route to remote subnet"
+	echo "adding route to remote subnet"
 	# upsert ip route: remoteSubnet via remoteVTEPOverlayIP
-  # overlay L3 subnet --> overlay L3 router for that subnet
+	# overlay L3 subnet --> overlay L3 router for that subnet
 	ip route add $remoteOverlaySubnet via $remoteVTEPOverlayIP dev $vtepDeviceName src $localVTEPOverlayIP scope global
 	# e.g. ip route add 10.255.2.0/24 via 10.255.2.0 dev silk.1
 
-  echo "adding ARP rule"
+	echo "adding ARP rule"
 	# upsert arp rule: remoteVTEPOverlayIP --> remoteVTEPOverlayMAC
-  # overlay router L3 --> overlay router L2
+	# overlay router L3 --> overlay router L2
 	ip neigh replace to $remoteVTEPOverlayIP dev $vtepDeviceName lladdr $remoteVTEPOverlayMAC
 
-  echo "adding FDB rule"
+	echo "adding FDB rule"
 	# upsert fdb rule: remoteVTEPOverlayMAC --> remoteUnderlayIP
-  # overlay router L2 --> underlay router L3
+	# overlay router L2 --> underlay router L3
 	bridge fdb replace $remoteVTEPOverlayMAC dev $vtepDeviceName dst $remoteUnderlayIP
 }
 ```
