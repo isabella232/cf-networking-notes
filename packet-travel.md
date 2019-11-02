@@ -176,7 +176,7 @@ You can also check out [this video recording](https://drive.google.com/file/d/0B
 Create policy to allow connections on port 7777
 
 ```
-cf allow-access proxy proxy --protocol tcp --port 7777
+cf add-network-policy proxy proxy --protocol tcp --port 7777
 ```
 
 Start netcat listener on destination app instance
@@ -202,7 +202,7 @@ Start up tcpdump sessions on all devices in the pathway.
 tcpdump -T vxlan -v -XX -i eth0 dst port 4789
 
 # host VTEP device
-tcpdump -T vxlan -v -XX -i eth0 dst port 4789
+tcpdump -T vxlan -v -XX -i silk-vtep
 
 # host veth device (host peer in host-container veth pair)
 tcpdump -v -XX -i s-010255132002 dst port 7777
